@@ -113,4 +113,53 @@ class CategoryController extends Controller
         $subcategories = Category::where('parent_id', $categoryId)->get();
         return response()->json($subcategories);
     }
+    
+    /**
+     * Generate SEO metadata for a category
+     * This is used by the ProductController when showing category pages
+     */
+    public static function generateCategorySeoMetadata(Category $category, $products = null)
+    {
+        // Generate SEO title if not set
+        if (empty($category->meta_title)) {
+            $category->meta_title = $category->name . ' - Produits Braun en Tunisie | Prix et Disponibilité';
+        }
+        
+        // Generate SEO description if not set
+        if (empty($category->meta_description)) {
+            $category->meta_description = 'Découvrez notre gamme de produits Braun ' . $category->name . ' en Tunisie. ' .
+                'Qualité garantie, prix compétitifs et livraison disponible partout en Tunisie.';
+        }
+        
+        // Generate SEO keywords if not set
+        if (empty($category->meta_keywords)) {
+            $keywords = [
+                $category->name,
+                'Braun',
+                'Tunisie',
+                'prix',
+                'acheter',
+            ];
+            
+            // Add product names as keywords if products are provided
+            if ($products && $products->count() > 0) {
+                foreach ($products->take(5) as $product) {
+                    $keywords[] = $product->name;
+                    
+                    // Extract model numbers and specific terms from product names
+                    $nameParts = explode(' ', $product->name);
+                    foreach ($nameParts as $part) {
+                        if (preg_match('/^[a-zA-Z]+-[a-zA-Z0-9]+$/', $part) || // Match patterns like "Silk-epil"
+                            (is_numeric($part) && strlen($part) < 5)) { // Match model numbers
+                            $keywords[] = $part;
+                        }
+                    }
+                }
+            }
+            
+            $category->meta_keywords = implode(', ', array_unique(array_filter($keywords)));
+        }
+        
+        return $category;
+    }
 }

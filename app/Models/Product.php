@@ -30,11 +30,17 @@ class Product extends Model
         'additional_links',  // JSON de liens (manuels, vidéos, etc.)
         'status',            // publié ou brouillon
         'type',              // physique, digital, etc.
-        'order'              // ordre d’affichage
+        'order',             // ordre d'affichage
+        'meta_title',        // Titre SEO personnalisé
+        'meta_description',  // Description SEO personnalisée
+        'meta_keywords',     // Mots-clés SEO
+        'seo_focus_keyword', // Mot-clé principal pour le SEO
+        'structured_data'    // Données structurées JSON-LD
     ];
     protected $casts = [
         'specifications' => 'array',
         'additional_links' => 'array',
+        'structured_data' => 'array',
     ];
     /**
      * Relations

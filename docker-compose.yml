@@ -3,7 +3,7 @@ services:
     build:
      context: .
      dockerfile: Dockerfile
-    container_name: braun-tn
+    container_name: braun-tn1
     restart: unless-stopped
     ports:
       - "8082:80"  # Changed to avoid conflict
@@ -11,6 +11,9 @@ services:
       - ./:/var/www/html:delegated
       - /var/www/html/vendor
       - /var/www/html/node_modules
+      - storage_data:/var/www/html/storage
+      - cache_data:/var/www/html/bootstrap/cache
+      - sessions_data:/var/www/html/storage/framework/sessions
     depends_on:
       db:
         condition: service_healthy
@@ -19,9 +22,16 @@ services:
       APP_DEBUG: true
       DB_HOST: db
       DB_PORT: 3306
-      DB_DATABASE: braun_tn
+      DB_DATABASE: braun
       DB_USERNAME: root
-      DB_PASSWORD: root
+      DB_PASSWORD: rootpassword
+      KONNECT_API_KEY: 64df5427b7cb96a7051c2262:geb4oKBQdaPv3EmPWV
+      KONNECT_WALLET_ID: 64df5427b7cb96a7051c2265
+      SESSION_DRIVER: file
+      SESSION_LIFETIME: 120
+      SESSION_DOMAIN: null
+      SESSION_SECURE_COOKIE: false
+      SANCTUM_STATEFUL_DOMAINS: localhost:8082,127.0.0.1:8082
     networks:
       - braun-network
     healthcheck:
@@ -33,19 +43,19 @@ services:
 
   db:
     image: mysql:8.0
-    container_name: braun-tn-db
+    container_name: braun-tn-db1
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --skip-host-cache
     environment:
-      MYSQL_DATABASE: braun_tn
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+      MYSQL_DATABASE: braun
+      MYSQL_ROOT_PASSWORD: rootpassword
     ports:
       - "3307:3306"
     volumes:
       - dbdata:/var/lib/mysql
+      - ./mysql-init-scripts:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -55,13 +65,13 @@ services:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: braun-tn-phpmyadmin
+    container_name: braun-tn-phpmyadmin1
     restart: unless-stopped
     ports:
       - "8081:80"
     environment:
       PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: rootpassword
     depends_on:
       db:
         condition: service_healthy
@@ -74,3 +84,6 @@ networks:
 
 volumes:
   dbdata:
+  storage_data:
+  cache_data:
+  sessions_data:

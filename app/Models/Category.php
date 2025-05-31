@@ -6,7 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
-    protected $fillable = ['name', 'slug', 'image', 'parent_id'];
+    protected $fillable = [
+        'name', 
+        'slug', 
+        'image', 
+        'parent_id',
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
+        'seo_focus_keyword',
+        'structured_data'
+    ];
+    
+    protected $casts = [
+        'structured_data' => 'array',
+    ];
 
     // Relation pour obtenir les sous-catégories (catégories enfants)
     public function children()

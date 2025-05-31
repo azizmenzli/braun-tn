@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
  <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Braun - Commandes</title>
     <link rel="shortcut icon" href="../assets/img/logo/favicon.png" type="image/x-icon">
 
@@ -36,7 +37,7 @@
                         <h3 class="mb-0 text-[28px]">Commandes</h3>
                         <ul class="text-tiny font-medium flex items-center space-x-3 text-text3">
                             <li class="breadcrumb-item text-muted">
-                                <a href="product-list.html" class="text-hover-primary"> Accueil</a>
+                                <a href="{{ route('dashboard.home') }}"" class="text-hover-primary"> Accueil</a>
                             </li>
                             <li class="breadcrumb-item flex items-center">
                                 <span class="inline-block bg-text3/60 w-[4px] h-[4px] rounded-full"></span>
@@ -77,109 +78,134 @@
                             <button onclick="exportTableToCSV('commandes.csv')" class="px-4 py-2 bg-green-500 text-white rounded">Exporter CSV</button>
                             <button onclick="exportTableToPDF()" class="px-4 py-2 bg-red-500 text-white rounded">Exporter PDF</button>
                         </div>
+                        </div>
                         
+                    <!-- Bulk Status Update Form -->
+                    <div class="px-8 py-4 bg-gray-50 border-b">
+                        <form id="bulkStatusForm" action="{{ route('dashboard.commandes.updateBulkStatus') }}" method="POST" class="flex items-center gap-4">
+                            @csrf
+                            <select name="status" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                                <option value="">Sélectionner un statut</option>
+                                <option value="encours">En attente</option>
+                                <option value="traite">Envoyée</option>
+                                <option value="annule">Annulée</option>
+                            </select>
+                            <button type="submit" class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm">
+                                Mettre à jour les commandes sélectionnées
+                            </button>
+                        </form>
                     </div>
                 
                     <div class="relative overflow-x-auto mx-8">
-                        <table class="w-[1500px] 2xl:w-full text-base text-left text-gray-500">
-                            <thead class="bg-white">
-                                <tr class="border-b border-gray6 text-tiny">
-                                    <th class="py-3 uppercase font-semibold">#REF</th>
-                                    <th class="py-3 uppercase font-semibold">Date de commande</th>
-                                    <th class="py-3 uppercase font-semibold">Client</th>
-                                    <th class="py-3 uppercase font-semibold">Téléphone</th>
-                                    <th class="py-3 uppercase font-semibold">E-mail</th>
-                                    <th class="py-3 uppercase font-semibold">Gouvernorat</th>
-                                    <th class="py-3 uppercase font-semibold">Adresse</th>
-                                    <th class="py-3 uppercase font-semibold"> Total</th>
-                                    <th class="py-3 uppercase font-semibold">Statut</th>
-                                    <th class="py-3 uppercase font-semibold">Modifier</th>
-                                    <th class="py-3 uppercase font-semibold">Action</th>
+                    <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden shadow bg-white">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    </th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">#REF</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Date de commande</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Client</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Téléphone</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">E-mail</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Gouvernorat</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Mode de paiement</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Statut de paiement</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Adresse</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Total</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Statut</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="bg-white divide-y divide-gray-100">
                                 @foreach($groupedOrders as $red_order => $ordersGroup)
-                                    <tr class="bg-white border-b border-gray6 last:border-0 text-start">
+                                    <tr class="hover:bg-gray-50 transition">
                                         <td class="px-3 py-3">
-                                            <a href="{{ route('dashboard.commandes.show', $red_order) }}" class="text-blue-600 hover:underline">#{{ $red_order }}</a>
+                                            <input type="checkbox" name="selected_orders[]" value="{{ $red_order }}" class="order-checkbox rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                         </td>
-                                        <td class="px-3 py-3">
-                                            <a href="{{ route('dashboard.commandes.show', $red_order) }}" class="text-blue-600 hover:underline">
-                                                {{ \Carbon\Carbon::parse($ordersGroup[0]->date_order)->format('d, M, Y \à H\hi') }}
+                                        <td class="px-3 py-3 font-semibold text-blue-600">
+                                            <a href="{{ route('dashboard.commandes.show', $red_order) }}" class="hover:underline">#{{ $red_order }}</a>
+                                        </td>
+                                        <td class="px-3 py-3 text-gray-600">
+                                            <a href="{{ route('dashboard.commandes.show', $red_order) }}" class="hover:underline">
+                                                {{ \Carbon\Carbon::parse($ordersGroup[0]->date_order)->format('d/m/Y H:i') }}
                                             </a>
                                         </td>
-                                        <td class="px-3 py-3">
-                                            {{ $ordersGroup[0]->nom }} {{ $ordersGroup[0]->prenom }}
-                                        </td>
+                                        <td class="px-3 py-3">{{ $ordersGroup[0]->nom }} {{ $ordersGroup[0]->prenom }}</td>
                                         <td class="px-3 py-3">{{ $ordersGroup[0]->telephone }}</td>
                                         <td class="px-3 py-3">{{ $ordersGroup[0]->email }}</td>
+                                        <td class="px-3 py-3">{{ $ordersGroup[0]->gouvernorat }}</td>
                                         <td class="px-3 py-3">
-                                            <a href="{{ route('dashboard.commandes.show', $red_order) }}" class="text-blue-600 hover:underline">
-                                                {{ $ordersGroup[0]->gouvernorat }}
-                                            </a>
+                                            @if(isset($ordersGroup[0]->mode_paiement))
+                                                @if($ordersGroup[0]->mode_paiement === 'carte')
+                                                    <span class="inline-block px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded">Carte bancaire</span>
+                                                @elseif($ordersGroup[0]->mode_paiement === 'espece')
+                                                    <span class="inline-block px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded">Espèces</span>
+                                                @else
+                                                    <span class="inline-block px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded">{{ $ordersGroup[0]->mode_paiement }}</span>
+                                                @endif
+                                            @else
+                                                <span class="inline-block px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded">Non défini</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-3 py-3">
+                                            @if(isset($ordersGroup[0]->mode_paiement) && $ordersGroup[0]->mode_paiement === 'carte')
+                                                @if(isset($ordersGroup[0]->payment_status))
+                                                    @if($ordersGroup[0]->payment_status === 'success')
+                                                        <span class="inline-block px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded">Payé</span>
+                                                    @elseif($ordersGroup[0]->payment_status === 'pending')
+                                                        <span class="inline-block px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded">En attente</span>
+                                                    @elseif($ordersGroup[0]->payment_status === 'failed')
+                                                        <span class="inline-block px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded">Échoué</span>
+                                                    @else
+                                                        <span class="inline-block px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded">Non initié</span>
+                                                    @endif
+                                                @else
+                                                    <span class="inline-block px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded">Non initié</span>
+                                                @endif
+                                            @else
+                                                <span class="inline-block px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded">Espèce</span>
+                                            @endif
                                         </td>
                                         <td class="px-3 py-3">{{ $ordersGroup[0]->adress }}</td>
-                                        <td class="px-3 py-3">
-                                            <a href="{{ route('dashboard.commandes.show', $red_order) }}" class="text-blue-600 hover:underline">
+                                        <td class="px-3 py-3 font-semibold text-green-700">
+                                            <a href="{{ route('dashboard.commandes.show', $red_order) }}" class="hover:underline">
                                                 {{ $ordersGroup->sum('total') }} DT
                                             </a>
                                         </td>
-                                        <td class="px-3 py-3">
+                                        <td class="px-1 py-3">
                                             <a href="{{ route('dashboard.commandes.show', $red_order) }}">
-                                                @if($ordersGroup[0]->status === 'pending')
-                                                    <span class="inline-block px-2 py-1 text-sm font-medium text-yellow-800 bg-yellow-100 rounded">En attente</span>
-                                                @elseif($ordersGroup[0]->status === 'delivered')
-                                                    <span class="inline-block px-2 py-1 text-sm font-medium text-green-800 bg-green-100 rounded">Envoyée</span>
-                                                @elseif($ordersGroup[0]->status === 'canceled')
-                                                    <span class="inline-block px-2 py-1 text-sm font-medium text-red-800 bg-red-100 rounded">Annulée</span>
+                                                @if($ordersGroup[0]->status === 'encours')
+                                                    <span class="bg-amber-100 text-amber-800 text-xs font-medium px-2 py-1 rounded-full">En attente</span>
+                                                @elseif($ordersGroup[0]->status === 'traité')
+                                                    <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">Envoyée</span>
+                                                @elseif($ordersGroup[0]->status === 'annulé')
+                                                    <span class="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full">Annulée</span>
                                                 @else
-                                                    <span class="inline-block px-2 py-1 text-sm font-medium text-gray-800 bg-gray-100 rounded">{{ $ordersGroup[0]->status }}</span>
+                                                    <span class="inline-block px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded">{{ $ordersGroup[0]->status }}</span>
                                                 @endif
                                             </a>
                                         </td>
-                                        <td class="px-3 py-3">
-                                        <form action="{{ route('dashboard.commandes.updateStatusOrder', $ordersGroup[0]->red_order) }}" method="POST">
-                                                @csrf
-                                                @method('PUT')
-                                                <select name="status" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
-                                                    <option value="encours" {{ $ordersGroup[0]->status == 'encours' ? 'selected' : '' }}>En attente</option>
-                                                    <option value="traité" {{ $ordersGroup[0]->status == 'traité' ? 'selected' : '' }}>Envoyée</option>
-                                                    <option value="annulé" {{ $ordersGroup[0]->status == 'annulé' ? 'selected' : '' }}>Annulée</option>
-                                                </select>
-                                                <button type="submit" class="mt-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm">
-                                                    Mettre à jour
-                                                </button>
-                                            </form>
-                                        </td>
-                                        <td class="px-9 py-3 text-end">
+                                        <td class="px-3 py-3 text-end">
                                             <div class="flex justify-end space-x-2">
-                                                <a href="{{ route('dashboard.commandes.show', $red_order) }}" 
-                                                   class="flex items-center justify-center w-10 h-10 bg-green-600 text-white rounded-md hover:bg-green-700" 
+                                                <a href="{{ route('dashboard.commandes.show', $red_order) }}"
+                                                   class="flex items-center justify-center w-8 h-8 bg-green-600 text-white rounded-md hover:bg-green-700"
                                                    target="_blank" title="Voir la commande">
-                                                    <!-- Icone Vue (œil) -->
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12s-3.75 6.75-9.75 6.75S2.25 12 2.25 12z" />
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                     </svg>
                                                 </a>
-                                            </div>
-                                        </td>
-                                        
-                                        <td class="px-9 py-3 text-end">
-                                            <div class="flex justify-end space-x-2">
-                                                <a href="{{ route('dashboard.commandes.export.pdf', $red_order) }}" 
-                                                   target="_blank" 
-                                                   class="flex items-center justify-center w-10 h-10 bg-red-600 text-white rounded-md hover:bg-red-700"
+                                                <a href="{{ route('dashboard.commandes.export.pdf', $red_order) }}"
+                                                   target="_blank"
+                                                   class="flex items-center justify-center w-8 h-8 bg-red-600 text-white rounded-md hover:bg-red-700"
                                                    title="Exporter en PDF">
-                                                    <!-- Icône PDF (document) -->
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a.75.75 0 00-.75-.75h-1.5V6a.75.75 0 00-.75-.75H8.25a.75.75 0 00-.75.75v4.875H6a.75.75 0 00-.75.75v2.625a.75.75 0 00.75.75h1.5V18a.75.75 0 00.75.75h9a.75.75 0 00.75-.75v-3h1.5a.75.75 0 00.75-.75z" />
                                                     </svg>
                                                 </a>
                                             </div>
                                         </td>
-                                        
-                                        
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -242,6 +268,174 @@
                 
                         doc.save("commandes.pdf");
                     }
+
+                    // Add new script for bulk selection
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const selectAllCheckbox = document.getElementById('selectAll');
+                        const orderCheckboxes = document.querySelectorAll('.order-checkbox');
+                        const bulkStatusForm = document.getElementById('bulkStatusForm');
+
+                        if (!selectAllCheckbox || !bulkStatusForm) {
+                            console.error('Required elements not found');
+                            return;
+                        }
+
+                        // Handle "Select All" checkbox
+                        selectAllCheckbox.addEventListener('change', function() {
+                            orderCheckboxes.forEach(checkbox => {
+                                checkbox.checked = this.checked;
+                            });
+                        });
+
+                        // Handle individual checkboxes
+                        orderCheckboxes.forEach(checkbox => {
+                            checkbox.addEventListener('change', function() {
+                                const allChecked = Array.from(orderCheckboxes).every(cb => cb.checked);
+                                selectAllCheckbox.checked = allChecked;
+                            });
+                        });
+
+                        // Handle bulk status update form submission
+                        bulkStatusForm.addEventListener('submit', function(e) {
+                            e.preventDefault();
+                            const selectedOrders = Array.from(orderCheckboxes)
+                                .filter(cb => cb.checked)
+                                .map(cb => cb.value);
+
+                            if (selectedOrders.length === 0) {
+                                alert('Veuillez sélectionner au moins une commande');
+                                return;
+                            }
+
+                            const formData = new FormData(this);
+                            selectedOrders.forEach(orderId => {
+                                formData.append('order_ids[]', orderId);
+                            });
+
+                            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+                            if (!csrfToken) {
+                                console.error('CSRF token not found');
+                                alert('Erreur de sécurité. Veuillez rafraîchir la page.');
+                                return;
+                            }
+
+                            fetch(this.action, {
+                                method: 'POST',
+                                body: formData,
+                                headers: {
+                                    'X-CSRF-TOKEN': csrfToken,
+                                    'Accept': 'application/json'
+                                }
+                            })
+                            .then(response => {
+                                if (!response.ok) {
+                                    return response.json().then(data => {
+                                        throw new Error(data.message || 'Une erreur est survenue');
+                                    });
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                if (data.success) {
+                                    window.location.reload();
+                                } else {
+                                    alert(data.message || 'Une erreur est survenue lors de la mise à jour des statuts');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                alert(error.message || 'Une erreur est survenue lors de la mise à jour des statuts');
+                            });
+                        });
+
+                        function openEditModal(redOrder, nom, prenom, email, telephone, gouvernorat, adress, status) {
+                            document.getElementById('editModal').classList.remove('hidden');
+                            document.getElementById('editForm').action = `/dashboard/commandes/${redOrder}`;
+                            document.getElementById('edit_nom').value = nom;
+                            document.getElementById('edit_prenom').value = prenom;
+                            document.getElementById('edit_email').value = email;
+                            document.getElementById('edit_telephone').value = telephone;
+                            document.getElementById('edit_gouvernorat').value = gouvernorat;
+                            document.getElementById('edit_adress').value = adress;
+                            document.getElementById('edit_status').value = status;
+                        }
+
+                        function closeEditModal() {
+                            document.getElementById('editModal').classList.add('hidden');
+                        }
+
+                        document.getElementById('editForm').addEventListener('submit', function(e) {
+                            e.preventDefault();
+                            const formData = new FormData(this);
+                            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+                            fetch(this.action, {
+                                method: 'PUT',
+                                body: formData,
+                                headers: {
+                                    'X-CSRF-TOKEN': csrfToken,
+                                    'Accept': 'application/json'
+                                }
+                            })
+                            .then(response => {
+                                if (!response.ok) {
+                                    return response.json().then(data => {
+                                        throw new Error(data.message || 'Une erreur est survenue');
+                                    });
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                if (data.success) {
+                                    window.location.reload();
+                                } else {
+                                    alert(data.message || 'Une erreur est survenue lors de la modification de la commande');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                alert(error.message || 'Une erreur est survenue lors de la modification de la commande');
+                            });
+                        });
+
+                        function deleteOrder(redOrder) {
+                            if (confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
+                                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+                                fetch(`/dashboard/commandes/${redOrder}`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'X-CSRF-TOKEN': csrfToken,
+                                        'Accept': 'application/json'
+                                    }
+                                })
+                                .then(response => {
+                                    if (!response.ok) {
+                                        return response.json().then(data => {
+                                            throw new Error(data.message || 'Une erreur est survenue');
+                                        });
+                                    }
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    if (data.success) {
+                                        window.location.reload();
+                                    } else {
+                                        alert(data.message || 'Une erreur est survenue lors de la suppression de la commande');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    alert(error.message || 'Une erreur est survenue lors de la suppression de la commande');
+                                });
+                            }
+                        }
+
+                        // Expose functions to window scope
+                        window.openEditModal = openEditModal;
+                        window.closeEditModal = closeEditModal;
+                        window.deleteOrder = deleteOrder;
+                    });
                 </script>
                 
                 </div>
@@ -251,6 +445,54 @@
 
     @include('dashboard.components.js')
 
+    <!-- Modal de modification -->
+    <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Modifier la commande</h3>
+                <form id="editForm" class="space-y-4">
+                    @csrf
+                    <input type="hidden" name="_method" value="PUT">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nom</label>
+                        <input type="text" name="nom" id="edit_nom" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Prénom</label>
+                        <input type="text" name="prenom" id="edit_prenom" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" name="email" id="edit_email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Téléphone</label>
+                        <input type="text" name="telephone" id="edit_telephone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Gouvernorat</label>
+                        <input type="text" name="gouvernorat" id="edit_gouvernorat" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Adresse</label>
+                        <input type="text" name="adress" id="edit_adress" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Statut</label>
+                        <select name="status" id="edit_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <option value="encours">En attente</option>
+                            <option value="traite">Envoyée</option>
+                            <option value="annule">Annulée</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-4">
+                        <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Annuler</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     
 </body>
 

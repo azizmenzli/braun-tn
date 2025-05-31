@@ -195,24 +195,34 @@
     // Close when clicking on backdrop
     document.getElementById('cartBackdrop')?.addEventListener('click', toggleCart);
 
-    // Handle cart item interactions
+    // Handle cart item interactions with robust event delegation
     document.addEventListener('click', function(e) {
-      const id = e.target.dataset.id;
-      
-      if (e.target.classList.contains('remove-item')) {
+      // Remove item
+      const removeBtn = e.target.closest('.remove-item');
+      if (removeBtn) {
+        const id = removeBtn.dataset.id;
         Cart.removeItem(parseInt(id));
+        return;
       }
-      else if (e.target.classList.contains('decrease-quantity')) {
+      // Decrease quantity
+      const decreaseBtn = e.target.closest('.decrease-quantity');
+      if (decreaseBtn) {
+        const id = decreaseBtn.dataset.id;
         const item = Cart.getCart().find(p => p.id == id);
         if (item && item.quantity > 1) {
           Cart.updateQuantity(item.id, item.quantity - 1);
         }
+        return;
       }
-      else if (e.target.classList.contains('increase-quantity')) {
+      // Increase quantity
+      const increaseBtn = e.target.closest('.increase-quantity');
+      if (increaseBtn) {
+        const id = increaseBtn.dataset.id;
         const item = Cart.getCart().find(p => p.id == id);
         if (item) {
           Cart.updateQuantity(item.id, item.quantity + 1);
         }
+        return;
       }
     });
 

@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <title>Commander</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-     <link rel="shortcut icon" href="assets/img/logo/favicon.png" type="image/x-icon">
-     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-     <link rel="shortcut icon" href="assets/img/logo/favicon.png" type="image/x-icon">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+     <link rel="shortcut icon" href="https://res.cloudinary.com/dlhonl1wo/image/upload/v1747046500/favicon_tvqtpu.png" type="image/x-icon">
  
  
     <style>
@@ -134,19 +135,32 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                      
                        
-                        <div class="payment-method border rounded-lg p-4 cursor-pointer" data-value="carte">
+                        <div class="payment-method border rounded-lg p-4 cursor-pointer" data-value="espece">
                             <div class="flex items-center space-x-3">
-                                <input type="radio" name="mode_paiement" value="espace" class="h-4 w-4 text-green-600 focus:ring-green-500" checked>
+                                <input type="radio" name="mode_paiement" value="espece" class="h-4 w-4 text-green-600 focus:ring-green-500" checked>
                                 <div>
                                     <span class="font-medium">Paiement à la livraison</span>
                                     <p class="text-sm text-gray-500">Espèce</p>
                                 </div>
                             </div>
                         </div>
+                        <div class="payment-method border rounded-lg p-4 cursor-pointer" data-value="carte">
+                            <div class="flex items-center space-x-3">
+                                <input type="radio" name="mode_paiement" value="carte" class="h-4 w-4 text-green-600 focus:ring-green-500">
+                                <div>
+                                    <span class="font-medium">Paiement par carte</span>
+                                    <p class="text-sm text-gray-500">Carte</p>
+                                </div>
+                            </div>
+
+    </div>
+
+
+                        
                     </div>
                 </div>
                
-                <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-full transition duration-200 mt-6 flex items-center justify-center">
+                <button style="background: linear-gradient(50deg, #a28147, #c19b56)" type="submit" class="w-full hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-full transition duration-200 mt-6 flex items-center justify-center">
                     <span id="submitText">Passer la commande</span>
                     <svg id="submitSpinner" class="animate-spin -mr-1 ml-2 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

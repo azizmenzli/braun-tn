@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4S6PCWSS1T"></script>
+ <script>   window.dataLayer = window.dataLayer || [];   function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());   gtag('config', 'G-4S6PCWSS1T');
+  </script>
+
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '699127362510982');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=699127362510982&ev=PageView&noscript=1"
+/></noscript>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contactez notre service après-vente | Braun Tunisie</title>
@@ -20,7 +41,7 @@
   <meta property="og:locale" content="fr_FR">
 
   <!-- Favicon -->
-  <link rel="icon" href="assets/img/logo/favicon.png" type="image/x-icon">
+  <link rel="shortcut icon" href="https://res.cloudinary.com/dlhonl1wo/image/upload/v1747046500/favicon_tvqtpu.png" type="image/x-icon">
 
   <!-- FontAwesome & TailwindCSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -79,17 +100,22 @@
             <div>
               <h3 class="font-medium">Adresse</h3>
               <a href="https://maps.app.goo.gl/yAhsL8d6hDPN6cuVA" target="_blank" rel="noopener noreferrer">
-                54 rue de Mercure, Ben Arous ZI 2013
+                24 Av. du Golf Arabe, Ariana
               </a>            </div>
           </div>
         </div>
 
         @if(session('success'))
-          <div class="bg-green-100 border-t-4 border-green-500 text-green-700 px-4 py-3 mb-4" role="alert">
-              <p class="font-bold">Succès</p>
-              <p>{{ session('success') }}</p>
-          </div>
-        @endif
+    <div class="flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800 shadow-sm mb-4" role="alert">
+        <svg class="h-5 w-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        <div>
+            <p class="font-semibold">Succès</p>
+            <p>{{ session('success') }}</p>
+        </div>
+    </div>
+@endif
 
         <!-- Formulaire -->
         <form class="space-y-4" action="{{ route('devenir-revendeur.store') }}" method="POST">
@@ -119,7 +145,7 @@
       <div class="w-full lg:w-1/2">
         <div class="rounded-lg overflow-hidden shadow-md">
           <iframe 
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3196.952014306546!2d10.229783575300493!3d36.74772287065682!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x12fd3641f4084b61%3A0x8d4a619e582d706a!2sGEI%20G%C3%A9n%C3%A9rale%20d'Équipement%20Industriel!5e0!3m2!1sfr!2stn!4v1745404518687!5m2!1sfr!2stn"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d205.50261087851982!2d10.175056365824869!3d36.856005434640714!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x12fd34abed0c0eaf%3A0x7706f8b2d4727e6c!2sGenerale%20d&#39;Equipement%20Industriel!5e1!3m2!1sfr!2stn!4v1748514940889!5m2!1sfr!2stn"
             width="100%" height="750" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
           </iframe>
         </div>

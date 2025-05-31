@@ -4,6 +4,7 @@ namespace App\Http;
 
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use App\Http\Middleware\TrackVisitor;
+use App\Http\Middleware\HttpsProtocol;
 
 class Kernel extends HttpKernel
 {
@@ -19,8 +20,9 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\LoadMigrationsFrom::class,
         \Illuminate\Routing\Middleware\SubstituteBindings::class,
-        // Ajoutez ici d'autres middlewares si nécessaire
-        TrackVisitor::class,  // Ajout du middleware pour suivre les visiteurs
+        \App\Http\Middleware\TrustProxies::class,
+        \App\Http\Middleware\HttpsProtocol::class,
+        TrackVisitor::class,  // Middleware pour suivre les visiteurs
     ];
 
     /**
@@ -33,7 +35,10 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\RefreshCsrfToken::class,
         ],
 
         'api' => [
@@ -48,6 +53,14 @@ class Kernel extends HttpKernel
      * @var array
      */
     protected $routeMiddleware = [
-        // Vous pouvez ajouter des middleware spécifiques à certaines routes ici
+        'auth' => \App\Http\Middleware\Authenticate::class,
+        'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+        'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
+        'can' => \Illuminate\Auth\Middleware\Authorize::class,
+        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+        'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
+        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
+        'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+        'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
     ];
-}
+} 

@@ -7,28 +7,52 @@
   $secondLink = count($links) > 1 ? $links[1]['url'] : $firstLink;
   $currency = session('currency', 'DT');
 @endphp
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4S6PCWSS1T"></script>
+ <script>   window.dataLayer = window.dataLayer || [];   function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());   gtag('config', 'G-4S6PCWSS1T');
+  </script>
+  <script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '699127362510982');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=699127362510982&ev=PageView&noscript=1"
+/></noscript>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $product->name }}</title>
-    <title>{{ $product->name }} - Acheter {{ $product->category->name ?? 'Produit' }} en Tunisie | NomDeTonSite</title>
-    <meta name="description" content="{{ Str::limit(strip_tags($product->desciption), 160) }}">
+    <title>{{ $product->meta_title ?? $product->name  }}</title>
+    <meta name="description" content="{{ $product->meta_description ?? Str::limit(strip_tags($product->description), 160) }}">
+    <meta name="keywords" content="{{ $product->meta_keywords ?? $product->name . ', ' . ($product->category->name ?? 'Produit') . ', Braun, Tunisie' }}">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="{{ url('/produit/'.$product->id) }}">
+    <link rel="canonical" href="{{ url('/produit/'.($product->sku ?? $product->id)) }}">
   
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="product">
-    <meta property="og:title" content="{{ $product->name }}">
-    <meta property="og:description" content="{{ Str::limit(strip_tags($product->desciption), 160) }}">
+    <meta property="og:title" content="{{ $product->meta_title ?? $product->name }}">
+    <meta property="og:description" content="{{ $product->meta_description ?? Str::limit(strip_tags($product->description), 160) }}">
     <meta property="og:image" content="{{ $firstLink }}">
-    <meta property="og:url" content="{{ url('/produit/'.$product->id) }}">
+    <meta property="og:url" content="{{ url('/produit/'.($product->sku ?? $product->id)) }}">
     <meta property="og:site_name" content="Braun Tunisie">
+    <meta property="product:price:amount" content="{{ $product->sale_price ?? $product->regular_price }}">
+    <meta property="product:price:currency" content="{{ $currency }}">
+    <meta property="product:availability" content="{{ $product->quantity > 0 ? 'in stock' : 'out of stock' }}">
+    <meta property="product:brand" content="Braun">
   
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ $product->name }}">
-    <meta name="twitter:description" content="{{ Str::limit(strip_tags($product->desciption), 160) }}">
+    <meta name="twitter:title" content="{{ $product->meta_title ?? $product->name }}">
+    <meta name="twitter:description" content="{{ $product->meta_description ?? Str::limit(strip_tags($product->description), 160) }}">
     <meta name="twitter:image" content="{{ $firstLink }}">
-    <link rel="shortcut icon" href="assets/img/logo/favicon.png" type="image/x-icon">
+    <link rel="shortcut icon" href="https://res.cloudinary.com/dlhonl1wo/image/upload/v1747046500/favicon_tvqtpu.png" type="image/x-icon">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -41,6 +65,50 @@
       font-family: 'Poppins', sans-serif;
     }
   </style>
+    <!-- Structured Data / JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": "{{ $product->name }}",
+        "image": [
+            "{{ $firstLink }}"
+            @if(count($links) > 1)
+                @foreach(array_slice($links, 1) as $link)
+                    ,"{{ $link['url'] }}"
+                @endforeach
+            @endif
+        ],
+        "description": "{{ strip_tags($product->description) }}",
+        "sku": "{{ $product->SKU }}",
+        "brand": {
+            "@type": "Brand",
+            "name": "Braun"
+        },
+        @if($product->category)
+        "category": "{{ $product->category->name }}",
+        @endif
+        "offers": {
+            "@type": "Offer",
+            "url": "{{ url('/produit/'.($product->sku ?? $product->id)) }}",
+            "priceCurrency": "{{ $currency }}",
+            "price": "{{ $product->sale_price ?? $product->regular_price }}",
+            "priceValidUntil": "{{ \Carbon\Carbon::now()->addMonths(6)->format('Y-m-d') }}",
+            "availability": "{{ $product->quantity > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock' }}"
+        }
+        @if($product->specifications)
+        ,"additionalProperty": [
+            @php $specs = json_decode($product->specifications, true); @endphp
+            @foreach($specs as $index => $spec)
+                {
+                    "@type": "PropertyValue",
+                    "name": "{{ $spec['name'] }}"
+                }@if($index < count($specs) - 1),@endif
+            @endforeach
+        ]
+        @endif
+    }
+    </script>
 </head>
 
 
@@ -98,14 +166,14 @@
                 <div class="bg-white p-0">
                     <!-- Titre et promo -->
                     <h1 class="text-3xl font-bold text-black mb-2"> {{ $product->category->name ?? 'N/A' }}</h1>
-                    <a href="{{ url('/produit/'.$product->id) }}"><h2 class="text-3xl font-bold text-black mb-2">{{ $product->name }}</h2>
+                    <a href="{{ url('/produit/'.($product->sku ?? $product->id)) }}"><h2 class="text-3xl font-bold text-black mb-2">{{ $product->name }}</h2>
                     </a>
                     
                     <!-- Prix -->
                     <div class="flex items-center mb-4">
-                        <span class="text-2xl font-bold text-black"> {{ number_format($product->sale_price > 0 ? $product->sale_price : $product->regular_price, 2) }} DT</span>
+                        <span class="text-2xl font-bold text-black"> {{ number_format($product->sale_price > 0 ? $product->sale_price : $product->regular_price) }} DT</span>
                         @if($product->sale_price > 0)
-                        <span class="text-lg text-gray-500 line-through ml-2"> {{ number_format($product->regular_price, 2) }} DT</span>
+                        <span class="text-lg text-gray-500 line-through ml-2"> {{ number_format($product->regular_price) }} DT</span>
                         @endif
 
                       </div>

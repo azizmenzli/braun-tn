@@ -10,6 +10,9 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TrafficController;
 use App\Http\Middleware\TrackVisitor;
 use App\Http\Controllers\DashboardController;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PaymentTransactionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,6 +24,11 @@ use App\Http\Controllers\DashboardController;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+// Storage temporary URL route
+Route::get('/storage/temporary/{path}', function ($path) {
+    return Storage::disk('public')->response($path);
+})->where('path', '.*')->name('storage.temporary');
 
 // Root Site web (Frontend)
 Route::get('/', function () {
@@ -46,9 +54,9 @@ Route::get('/categorie', function () { // General category listing? Consider usi
 
 // Authentication Routes (Admin Login for Dashboard)
 // This is the route that should display the login form for the dashboard
-Route::get('/dashboard/', [UserController::class, 'showLogin'])->name('login');
+Route::get('/dashboard/login', [UserController::class, 'showLogin'])->name('login');
 // This is the route that should handle the form submission
-Route::post('/dashboard/', [UserController::class, 'login']); // Laravel will match this to UserController@login on POST
+Route::post('/dashboard/login', [UserController::class, 'login']); // Laravel will match this to UserController@login on POST
 Route::post('/dashboard/logout', [UserController::class, 'logout'])->name('logout');
 
 // Password Reset Routes for Dashboard Users
@@ -68,21 +76,24 @@ Route::middleware(['auth'])->prefix('dashboard')->name('dashboard.')->group(func
     Route::resource('categories', CategoryController::class)->names('categories'); // Access with e.g., route('dashboard.categories.index')
     Route::get('categories/{category}/subcategories', [CategoryController::class, 'getSubcategories'])->name('categories.subcategories');
 
-    // Products
-    Route::get('ajouter-produits', [ProductController::class, 'add_product'])->name('produits.add'); // Changed from 'dashboard.ajouter-produits'
-    Route::post('ajouter-produits', [ProductController::class, 'store'])->name('produits.store'); // Changed from 'dashboard.ajouter-produits'
+    // Products Routes - Consolidated
     Route::get('produits', [ProductController::class, 'index'])->name('produits.index');
+    Route::get('ajouter-produits', [ProductController::class, 'add_product'])->name('produits.add');
+    Route::post('ajouter-produits', [ProductController::class, 'store'])->name('produits.store');
     Route::post('validate-sku', [ProductController::class, 'validateSku'])->name('produits.validate.sku');
-    Route::resource('produits', ProductController::class)->except(['index', 'store', 'create'])->names(['update' => 'produits.update', ]);
-    Route::resource('produits', ProductController::class)->except(['index', 'store', 'create'])->names('produits'); // Use 'produits.show', 'produits.edit', etc. 'add_product' covers 'create'.
-                                                                                                        // The existing index and store routes are defined above.
-    Route::get('/profile', [UserController::class, 'showProfileDetail'])->name('profile');
-    Route::post('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
+    Route::get('produits/{product}/edit', [ProductController::class, 'edit'])->name('produits.edit');
+    Route::put('produits/{product}', [ProductController::class, 'update'])->name('produits.update');
+    Route::delete('produits/{product}', [ProductController::class, 'destroy'])->name('produits.destroy');
+    Route::get('produits/{product}', [ProductController::class, 'show'])->name('produits.show');
+
     // Orders
-    Route::get('commandes', [OrderController::class, 'index'])->name('commandes.groupedOrders'); // Renamed from 'groupedOrders' for consistency. Access with route('dashboard.commandes.groupedOrders')
+    Route::get('commandes', [OrderController::class, 'index'])->name('commandes.groupedOrders');
     Route::get('detail-commande/{red_order}', [OrderController::class, 'show'])->name('commandes.show');
     Route::put('commandes/{id}/status', [OrderController::class, 'updateStatusOrder'])->name('commandes.updateStatusOrder');
+    Route::post('commandes/bulk-status', [OrderController::class, 'updateBulkStatus'])->name('commandes.updateBulkStatus');
     Route::get('commandes/{red_order}/export-pdf', [OrderController::class, 'exportPdf'])->name('commandes.export.pdf');
+    Route::delete('commandes/{red_order}', [OrderController::class, 'destroy'])->name('commandes.destroy');
+    Route::put('commandes/{red_order}', [OrderController::class, 'update'])->name('commandes.update');
 
     // Clients
     Route::get('clients', [OrderController::class, 'clients'])->name('clients.index'); // Renamed from 'clients' for consistency
@@ -99,13 +110,31 @@ Route::middleware(['auth'])->prefix('dashboard')->name('dashboard.')->group(func
     Route::put('users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::get('profile', [UserController::class, 'showProfileDetail'])->name('profile');
+    Route::post('profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
 
     // Traffic
     Route::get('traffic', [TrafficController::class, 'index'])->name('traffic');
 
+    // Route pour la page de conversion (accepte les filtres GET : day, month, year)
+    Route::get('conversion', [DashboardController::class, 'conversion'])->name('conversion');
+
     // Fallback for potentially removed specific anonymous routes if they were meant for dashboard
     // For example, if 'dashboard/produits' was an anonymous function before, it's now covered by ProductController.
     // Ensure all necessary views like 'dashboard/transaction', 'dashboard/commandes' are handled by controllers or are static views not needing specific routes if covered by broader controllers.
+
+    // Routes du dashboard
+    Route::get('/', [DashboardController::class, 'index'])->name('index');
+    Route::resource('orders', OrderController::class);
+    Route::resource('transactions', PaymentTransactionController::class);
+
+    // Route pour les logs des visiteurs et des commandes
+    Route::get('/logs', [OrderController::class, 'orderVisitorLogs'])->name('dashboard.order-visitor-logs');
+
+    // Transactions Routes
+    Route::get('transactions', [PaymentTransactionController::class, 'index'])->name('transactions.index');
+    Route::get('transactions/{transaction}', [PaymentTransactionController::class, 'show'])->name('transactions.show');
+    Route::get('transactions/{transaction}/export-pdf', [PaymentTransactionController::class, 'exportPdf'])->name('transactions.export.pdf');
+    Route::put('transactions/{transaction}/status', [PaymentTransactionController::class, 'updateStatus'])->name('transactions.updateStatus');
 });
 
 
@@ -169,5 +198,23 @@ Route::get('transaction', function () { // This path is '/' + 'transaction'. If 
     return view('dashboard/transaction');
 })->name('transaction');
 */
+
+// Route pour rafraîchir le token CSRF
+Route::get('/csrf-token', function () {
+    return response()->json(['token' => csrf_token()]);
+});
+
+// Consolidated Payment Routes
+Route::get('/payment-success', function () {
+    return view('payment.success', ['payment_ref' => request('payment_ref')]);
+})->name('payment.success');
+ 
+Route::get('/payment-fail', function () {
+    return view('payment.fail');
+})->name('payment.fail'); 
+
+
+
+
 
 ?>

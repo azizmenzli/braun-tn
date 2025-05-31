@@ -24,7 +24,7 @@ class CreateOrdersTable extends Migration
             $table->unsignedBigInteger('id_produit');
             $table->decimal('prix_produit', 10, 2);
             $table->integer('quantite_produit');
-            $table->enum('mode_paiement', ['espace', 'carte']);
+            $table->enum('mode_paiement', ['espece', 'carte']);
             $table->dateTime('date_shipping')->nullable();
             $table->string('code_compagnie')->nullable();
             $table->string('source_commande');

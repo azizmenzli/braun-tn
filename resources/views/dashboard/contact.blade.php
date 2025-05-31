@@ -96,7 +96,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($demandes as $demande)
+                        @foreach ($demandes as $demande)
                             <tr class="bg-white border-b border-gray6 last:border-0 text-start mx-9">
                                 <td  class="pr-3  whitespace-nowrap">
                                     <span class="font-medium text-heading text-hover-primary transition">  {{ $demande->id }}
@@ -106,27 +106,30 @@
                                
                                 </td>
                                 <td class="px-3 py-3 font-normal text-[#55585B] text-end">
-                                    {{ $demande->sujet }}
+                                    {{ $demande->email}}
                                 </td>
-                                <td class="px-3 py-3 font-normal text-[#55585B] text-end">
-                                    {{ $demande->email }}
-                                </td>
+                               
                                 <td class="px-3 py-3 font-normal text-[#55585B] text-end">
                                     {{ $demande->phone }}
                                 </td>
+                                 <td class="px-3 py-3 font-normal text-[#55585B] text-end">
+                                    {{ $demande->sujet }}
+                                </td>
+                                
+                               
                                 <td class="px-3 py-3 font-normal text-[#55585B] text-end">
                                     @if(strlen($demande->message) > 50)
-                                        <button 
-                                            @click="document.getElementById('modal-{{ $demande->id }}').showModal()" 
+                                        <button
+                                            @click="document.getElementById('modal-{{ $demande->id }}').showModal()"
                                             class="text-blue-600 hover:underline font-medium">
                                             Voir le message
                                         </button>
-                                
+                               
                                         <dialog id="modal-{{ $demande->id }}" class="rounded-lg p-6 w-[90%] max-w-xl shadow-xl bg-white">
                                             <h3 class="text-lg font-semibold mb-4">Message complet</h3>
                                             <p class="text-gray-700 mb-4">{{ $demande->message }}</p>
-                                            <button 
-                                                onclick="document.getElementById('modal-{{ $demande->id }}').close()" 
+                                            <button
+                                                onclick="document.getElementById('modal-{{ $demande->id }}').close()"
                                                 class="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                                 Fermer
                                             </button>
@@ -135,10 +138,10 @@
                                         {{ $demande->message }}
                                     @endif
                                 </td>
-                                
+                               
                                  
                             </tr>
-                            @endforeach                          
+                            @endforeach                              
                           
                         </tbody>
                     </table>

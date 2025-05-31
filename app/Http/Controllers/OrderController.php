@@ -12,14 +12,17 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Mail\ClientOrderMail;
 use App\Mail\AdminOrderMail;  
-
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\DB;
+use App\Models\PaymentTransaction;
 
 class OrderController extends Controller
 {
+    
+
     public function processOrder(Request $request)
     {
-        // --- Step 1: Validate basic fields and that 'products' is a valid JSON string ---
+        // Étape 1 : Validation initiale
         $initialValidator = Validator::make($request->all(), [
             'nom' => 'required|string|max:255',
             'prenom' => 'required|string|max:255',
@@ -27,101 +30,54 @@ class OrderController extends Controller
             'telephone' => 'required|regex:/^\+?[0-9]{8,15}$/',
             'gouvernorat' => 'required|string',
             'adress' => 'required|string',
-            'products' => 'required|string|json', // Expect a JSON string
-            'mode_paiement' => 'required|in:espace,carte',
-            // Optional fields validation (adjust as needed)
+            'products' => 'required|string|json',
+            'mode_paiement' => 'required|in:espece,carte',
             'sex' => 'nullable|in:male,female,other',
             'date_naissance' => 'nullable|date|before_or_equal:today',
         ]);
-
+     
         if ($initialValidator->fails()) {
-            Log::error('Initial validation failed', ['errors' => $initialValidator->errors()]);
-            // Return with specific errors for the initial fields
             return back()->withErrors($initialValidator)->withInput();
         }
-
-        // --- Step 2: Decode the products JSON string ---
-        $productsInput = $request->input('products');
-        $productsArray = json_decode($productsInput, true); // Decode into an associative array
-
-        // Check if decoding was successful and if it's a non-empty array
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($productsArray) || empty($productsArray)) {
-            Log::error('Products JSON decoding failed or empty array', [
-                'products_input' => $productsInput,
-                'json_error' => json_last_error_msg()
-            ]);
-            // Add a specific error for the products field
-            return back()->withErrors(['products' => 'Les données du panier sont invalides ou vides.'])
-                         ->withInput();
+     
+        // Étape 2 : Décodage des produits
+        $productsArray = json_decode($request->input('products'), true);
+        if (json_last_error() !== JSON_ERROR_NONE || empty($productsArray)) {
+            return back()->withErrors(['products' => 'Données du panier invalides ou vides.'])->withInput();
         }
-
-        // --- Step 3: Validate the content of the decoded products array ---
-        // We create a temporary data structure to validate the array content
-        $productsDataForValidation = ['products' => $productsArray];
-        $productsValidator = Validator::make($productsDataForValidation, [
-            'products' => 'required|array|min:1', // Ensure it's an array with at least one item
-            'products.*.product_id' => 'required|integer|exists:products,id', // Validate each item
+     
+        // Étape 3 : Validation des produits
+        $productsValidator = Validator::make(['products' => $productsArray], [
+            'products' => 'required|array|min:1',
+            'products.*.product_id' => 'required|integer|exists:products,id',
             'products.*.quantity' => 'required|integer|min:1',
             'products.*.price' => 'required|numeric|min:0',
         ]);
-
+     
         if ($productsValidator->fails()) {
-            Log::error('Products content validation failed', ['errors' => $productsValidator->errors()]);
-            // Return with specific errors for the products items
-            return back()->withErrors($productsValidator)->withInput(); // Laravel can handle nested errors display
+            return back()->withErrors($productsValidator)->withInput();
         }
-
-
-        // --- Step 4: Proceed with order processing using the validated $productsArray ---
+     
         DB::beginTransaction();
+     
         try {
             $redOrder = 'ORD-' . strtoupper(uniqid());
-            $sourceCommande = 'web';
+            $sourceCommande = $request->input('source_commande', 'web');
             $ipClient = $request->ip();
             $deviceClient = $this->detectDevice($request);
-            $orders = []; // To collect created orders for the email
-
-            // Use the decoded and validated $productsArray
-            $productsCollection = collect($productsArray)->map(function ($item) {
-                 return [
-                    'product_id' => (int)$item['product_id'],
-                    'quantity' => (int)$item['quantity'],
-                    'price' => (float)$item['price']
-                 ];
-            });
-
-
-            foreach ($productsCollection as $productData) {
-                // Vérification du stock avec lockForUpdate pour éviter les conflits
-                $produit = Product::where('id', $productData['product_id'])
-                    ->lockForUpdate()
-                    ->first(); // Use first() instead of get() when expecting one result
-
-                // Check if product exists *and* has enough stock
-                if (!$produit) {
+            $orders = [];
+            $totalAmount = 0;
+     
+            foreach ($productsArray as $item) {
+                $produit = Product::where('id', $item['product_id'])->lockForUpdate()->first();
+     
+                if (!$produit || $produit->quantity < $item['quantity']) {
                     DB::rollBack();
-                    Log::error('Product not found during order processing', ['product_id' => $productData['product_id']]);
-                    return back()
-                        ->with('error', 'Un produit de votre commande n\'existe plus.')
-                        ->withInput();
+                    return back()->with('error', 'Produit indisponible ou stock insuffisant.')->withInput();
                 }
-                if ($produit->quantity < $productData['quantity']) {
-                    DB::rollBack();
-                    Log::error('Stock insuffisant', [
-                        'product_id' => $productData['product_id'],
-                        'product_name' => $produit->name, // Log name for clarity
-                        'requested' => $productData['quantity'],
-                        'available' => $produit->quantity
-                    ]);
-                    return back()
-                        ->with('error', 'Le produit "'.$produit->name.'" n\'a pas suffisamment de stock (Disponible: '.$produit->quantity.', Demandé: '.$productData['quantity'].')')
-                        ->withInput();
-                }
-
-                // Mise à jour du stock
-                $produit->decrement('quantity', $productData['quantity']);
-                // $produit->save(); // decrement already saves
-
+     
+                $produit->decrement('quantity', $item['quantity']);
+     
                 $order = Order::create([
                     'red_order' => $redOrder,
                     'nom' => $request->nom,
@@ -130,62 +86,173 @@ class OrderController extends Controller
                     'telephone' => $request->telephone,
                     'gouvernorat' => $request->gouvernorat,
                     'adress' => $request->adress,
-                    'sex' => $request->sex, // Make sure 'sex' is nullable in migration if not required
-                    'date_naissance' => $request->date_naissance, // Make sure 'date_naissance' is nullable
+                    'sex' => $request->sex,
+                    'date_naissance' => $request->date_naissance,
                     'date_order' => now(),
-                    'id_produit' => $productData['product_id'],
-                    'prix_produit' => $productData['price'], // Use price from validated data
-                    'quantite_produit' => $productData['quantity'], // Use quantity from validated data
+                    'id_produit' => $item['product_id'],
+                    'prix_produit' => $item['price'],
+                    'quantite_produit' => $item['quantity'],
                     'mode_paiement' => $request->mode_paiement,
                     'source_commande' => $sourceCommande,
                     'ip_client' => $ipClient,
                     'device_client' => $deviceClient,
-                    'status' => 'encours' // Default status
+                    'status' => 'encours'
                 ]);
-
-                $orders[] = $order; // Add the created order to the list for the email
+     
+                $totalAmount += $item['price'] * $item['quantity'];
+                $orders[] = $order;
             }
-
-            DB::commit(); // Commit transaction only if all products are processed successfully
-
-            // Send email (Consider queuing this for better performance in production)
+     
+            DB::commit();
+     
+            // Envoi des emails
             try {
-                Mail::to($request->email)->send(new ClientOrderMail($orders)); 
-        
-                // Send email to all admin users
+                Mail::to($request->email)->send(new ClientOrderMail($orders));
                 $adminUsers = User::whereNotNull('email')->get();
                 foreach ($adminUsers as $user) {
-                    Mail::to($user->email)->send(new AdminOrderMail($orders[0]));
-    }
-
-                Log::info('Order confirmation email sent successfully', [
-                'red_order' => $redOrder, 
-                'email' => $request->email,
-                'admin_count' => count($adminUsers)
-
-            ]);
+                    Mail::to($user->email)->send(new AdminOrderMail($orders));
+                }
             } catch (\Exception $mailException) {
-                 Log::error('Failed to send order confirmation email', [
-                     'red_order' => $redOrder,
-                     'email' => $request->email,
-                     'error' => $mailException->getMessage()
-                 ]);
-                 // Don't rollback the transaction, the order is placed, just log the email issue.
-                 // Optionally, notify admin.
+                Log::error("Erreur lors de l'envoi de l'email : " . $mailException->getMessage());
             }
-
-         
-            return redirect()->route('checkout.confirmation', ['redOrder' => $redOrder])
-                ->with('success', 'Commande passée avec succès ! Un email de confirmation vous a été envoyé.')
-                ->with('clearCart', true); // Add a flag for JS on confirmation page
-
+ 
+    if ($request->mode_paiement === 'carte') {
+        $apiKey = env('KONNECT_API_KEY');
+        $walletId = env('KONNECT_WALLET_ID');
+        $amount = intval($totalAmount * 1000)+(8000+1000); // total en millimes
+        $orderId = 'ORDER-' . time();
+ 
+        Log::info('Paiement carte - Données préparées', [
+            'apiKey' => $apiKey,
+            'walletId' => $walletId,
+            'amount' => $amount,
+            'orderId' => $orderId,
+            'email' => $request->email,
+        ]);
+ 
+        $data = [
+            'receiverWalletId' => $walletId,
+            'amount' => $amount,
+            'orderId' => $orderId,
+            'successUrl' => route('payment.success', ['redOrder' => $redOrder]),
+            'failUrl' => route('payment.fail', ['redOrder' => $redOrder]),
+            'email' => $request->email,
+        ];
+ 
+        try {
+            $client = new Client();
+            $response = $client->post('https://api.konnect.network/api/v2/payments/init-payment', [
+                'json' => $data,
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'x-api-key' => $apiKey,
+                ]
+            ]);
+ 
+            $result = json_decode($response->getBody()->getContents(), true);
+ 
+            Log::info('Réponse de Konnect', ['result' => $result]);
+ 
+            // Gestion du statut selon la réponse Konnect (3 états)
+            $status = 'failed';
+            $payUrl = $result['payUrl'] ?? null;
+ 
+            // Si la réponse contient explicitement un statut
+            if (isset($result['status'])) {
+                if ($result['status'] === 'pending') {
+                    $status = 'pending';
+                } elseif (in_array($result['status'], ['success', 'succeeded', 'paid'])) {
+                    $status = 'success';
+                } elseif (in_array($result['status'], ['fail', 'failed', 'cancelled', 'canceled'])) {
+                    $status = 'failed';
+                }
+            } elseif (!empty($payUrl)) {
+                // Si pas de statut mais payUrl présent, on considère pending
+                $status = 'pending';
+            }
+ 
+            // Vérifier si le payUrl contient "fail" ou "cancel" pour marquer comme failed
+            if (!empty($payUrl) && (stripos($payUrl, 'fail') !== false || stripos($payUrl, 'cancel') !== false)) {
+                $status = 'failed';
+            }
+ 
+            // Toujours enregistrer la transaction avec status 'attente' (ou 'pending')
+            PaymentTransaction::create([
+                'red_order' => $redOrder,
+                'order_id' => $orderId,
+                'amount' => $amount / 1000,
+                'status' => 'attente', // statut initial
+                'payment_method' => 'card',
+                'payment_url' => $payUrl,
+                'payment_details' => $result
+            ]);
+ 
+            // Log du statut final
+            Log::info('Statut de paiement enregistré', [
+                'order_id' => $orderId,
+                'red_order' => $redOrder,
+                'status' => $status,
+                'payUrl' => $payUrl,
+                'result' => $result,
+            ]);
+ 
+            if ($status === 'pending' && $payUrl) {
+                return redirect()->away($payUrl);
+            }
+ 
+            if ($status === 'success') {
+                return redirect()->route('checkout.confirmation', ['redOrder' => $redOrder])
+                    ->with('success', 'Paiement confirmé et commande validée.');
+            }
+ 
+            // Si échec
+            return back()->with('error', 'Erreur lors de l\'initialisation du paiement.');
         } catch (\Exception $e) {
-            DB::rollBack(); // Rollback on any exception during processing
-            Log::error('Erreur commande: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            // Provide a generic error message to the user
-            return back()->with('error', 'Une erreur technique est survenue lors du traitement de votre commande. Veuillez réessayer.')->withInput();
+            Log::error('Exception Konnect', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+ 
+            // Enregistrer la transaction échouée
+            PaymentTransaction::create([
+                'red_order' => $redOrder,
+                'order_id' => $orderId,
+                'amount' => $amount / 1000,
+                'status' => 'failed',
+                'payment_method' => 'card',
+                'payment_details' => [
+                    'error' => $e->getMessage(),
+                    'error_trace' => $e->getTraceAsString()
+                ]
+            ]);
+ 
+            return back()->with('error', 'Erreur avec le service de paiement : ' . $e->getMessage());
         }
     }
+     
+     
+            // Paiement par espèce ou autre
+            return redirect()->route('checkout.confirmation', ['redOrder' => $redOrder])
+                ->with('success', 'Commande confirmée. Email de confirmation envoyé.')
+                ->with('clearCart', true);
+     
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur commande: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->with('error', 'Une erreur est survenue. Veuillez réessayer.')->withInput();
+        }
+    }
+     
+   /* private function detectDevice(Request $request)
+    {
+        $userAgent = $request->header('User-Agent');
+        if (preg_match('/mobile/i', $userAgent)) return 'mobile';
+        if (preg_match('/tablet/i', $userAgent)) return 'tablet';
+        return 'desktop';
+    }
+     */
+
+
 
     public function checkout()
     {
@@ -238,6 +305,7 @@ class OrderController extends Controller
     // Récupérer les commandes avec leurs produits associés
     $ordersQuery = DB::table('orders')
         ->join('products', 'orders.id_produit', '=', 'products.id')
+        ->leftJoin('payment_transactions', 'orders.red_order', '=', 'payment_transactions.red_order')
         ->select(
             'orders.id AS order_id',
             'orders.red_order',
@@ -250,9 +318,11 @@ class OrderController extends Controller
             'orders.adress',
             'orders.gouvernorat',
             'orders.quantite_produit',
+            'orders.mode_paiement',
             'orders.prix_produit',
             'products.id AS product_id',
-            'products.name AS product_name'
+            'products.name AS product_name',
+            'payment_transactions.status as payment_status'
         );
 
     // Filtrer par le terme de recherche si présent
@@ -283,6 +353,13 @@ class OrderController extends Controller
 
             $order->subtotal = $subtotal;
             $order->total = $total;
+
+            // Ajouter le statut de paiement pour les commandes par carte
+            if ($order->mode_paiement === 'carte') {
+                $order->payment_status = $order->payment_status ?? 'pending';
+            } else {
+                $order->payment_status = 'not_applicable';
+            }
         }
 
         $groupedOrders[$red_order]->totalSubtotal = $totalSubtotal + $frais_livraison + $frais_fiscal;
@@ -347,7 +424,7 @@ class OrderController extends Controller
      {
          // Valider les données
          $request->validate([
-             'status' => 'required|string|in:encours,traité,annulé', // Les statuts possibles
+             'status' => 'required|string|in:encours,traite,annule', // Correction des statuts pour correspondre à la base de données
          ]);
      
          // Récupérer la commande spécifique par red_order
@@ -357,7 +434,7 @@ class OrderController extends Controller
      
          // Vérifier si la commande existe
          if (!$order) {
-             return redirect()->route('dashboard.commandes.groupedOrders')->with('error', 'Aucune commande trouvée avec cet ID.');
+             return redirect()->route('dashboard.commandes')->with('error', 'Aucune commande trouvée avec cet ID.');
          }
      
          // Mettre à jour le statut de la commande
@@ -365,7 +442,7 @@ class OrderController extends Controller
              ->where('red_order', $red_order)
              ->update(['status' => $request->status]);
      
-         return redirect()->route('dashboard.commandes.groupedOrders')->with('success', 'Statut de la commande mis à jour.');
+         return redirect()->route('dashboard.commandes')->with('success', 'Statut de la commande mis à jour.');
      }
      
  
@@ -484,6 +561,105 @@ public function exportPdf($red_order)
     ]);
 
     return $pdf->stream("commande-{$red_order}.pdf");
+}
+
+public function groupedOrders(Request $request)
+{
+    $query = Order::query();
+
+    // Recherche
+    if ($request->has('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('red_order', 'like', "%{$search}%")
+              ->orWhere('nom', 'like', "%{$search}%")
+              ->orWhere('prenom', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%")
+              ->orWhere('telephone', 'like', "%{$search}%");
+        });
+    }
+
+    // Récupérer les commandes groupées
+    $orders = $query->orderBy('date_order', 'desc')->get();
+    $groupedOrders = $orders->groupBy('red_order');
+
+    // Pagination manuelle
+    $page = $request->get('page', 1);
+    $perPage = 10;
+    $total = $groupedOrders->count();
+    $groupedOrders = $groupedOrders->forPage($page, $perPage);
+
+    // Créer une instance de LengthAwarePaginator
+    $orders = new \Illuminate\Pagination\LengthAwarePaginator(
+        $groupedOrders,
+        $total,
+        $perPage,
+        $page,
+        ['path' => $request->url(), 'query' => $request->query()]
+    );
+
+    return view('dashboard.commandes', compact('groupedOrders', 'orders'));
+}
+
+public function updateBulkStatus(Request $request)
+{
+    $request->validate([
+        'order_ids' => 'required|array',
+        'order_ids.*' => 'required|string',
+        'status' => 'required|in:encours,traite,annule' // Correction des statuts pour correspondre à la base de données
+    ]);
+
+    try {
+        DB::beginTransaction();
+
+        foreach ($request->order_ids as $red_order) {
+            Order::where('red_order', $red_order)
+                ->update(['status' => $request->status]);
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Statuts mis à jour avec succès'
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false,
+            'message' => 'Erreur lors de la mise à jour des statuts: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+public function destroy($red_order)
+{
+    try {
+        DB::beginTransaction();
+
+        // Delete all orders with the given red_order
+        $deleted = Order::where('red_order', $red_order)->delete();
+
+        if ($deleted === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Commande introuvable'
+            ], 404);
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Commande supprimée avec succès'
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false,
+            'message' => 'Erreur lors de la suppression de la commande: ' . $e->getMessage()
+        ], 500);
+    }
 }
 
 

@@ -84,7 +84,7 @@ class ProductController extends Controller
         // Stock par défaut
         $product->stock_status = 'instock';
     
-        // Définir l’ordre d’affichage
+        // Définir l'ordre d'affichage
         #$product->order = Product::max('order') + 1;
     
         // Enregistrer
@@ -224,7 +224,8 @@ public function showCategoryAndSubCategoryProducts($categoryId, Request $request
     $subCategoryId = $request->input('subCategoryId');
 
     // Créer la requête de base pour récupérer les produits de la catégorie principale
-    $productsQuery = Product::where('category_id', $categoryId);
+    $productsQuery = Product::where('category_id', $categoryId)
+                            ->where('quantity', '>', 0); // Filtrer les produits en stock uniquement
 
     // Si un ID de sous-catégorie est fourni, on ajoute la condition de sous-catégorie
     if ($subCategoryId) {
@@ -254,6 +255,7 @@ public function showCategoryAndSubCategoryProducts($categoryId, Request $request
     // Récupérer les produits filtrés ou paginés
     $products = $productsQuery->orderBy('sale_price', 'asc')->paginate(48);
 
+   
     // Retourner la vue avec les données nécessaires
     return view('categorie', compact('category', 'subCategories', 'products', 'sort_by'));
 }
@@ -262,65 +264,80 @@ public function showCategoryAndSubCategoryProducts($categoryId, Request $request
 
 
  
-public function update(Request $request, Product $product)
+public function update(Request $request, $id)
 {
-    // Valider les données reçues
+    try {
     $validated = $request->validate([
+            'name' => 'required|string|max:255',
         'SKU' => 'required|string|max:255',
-        'name' => 'required|string|max:255',
         'description' => 'required|string',
         'regular_price' => 'required|numeric|min:0',
         'sale_price' => 'nullable|numeric|min:0',
         'category_id' => 'required|exists:categories,id',
-        'sous_categorie_id' => 'nullable|numeric',
         'status' => 'required|in:published,draft',
         'type' => 'required|in:simple,variable',
-        'additional_links' => 'nullable|string',
-        'specifications' => 'nullable|array',
+            'quantity' => 'required|integer|min:0',
+            'image_links' => 'nullable|string',
         'specifications.*.name' => 'required_with:specifications|string|max:255',
-        'specifications.*.icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        'quantity' => 'required|integer|min:0', 
+            'specifications.*.icon' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
-    // Mise à jour des données principales
+        $product = Product::findOrFail($id);
+        
+        // Mise à jour des champs de base
     $product->fill($validated);
     $product->slug = Str::slug($validated['name']);
 
-    // Traiter les liens additionnels
-    if ($request->additional_links) {
-        $links = collect(explode(',', $request->additional_links))
-            ->map(fn($link) => ['url' => trim($link)])
+        // Gestion des liens d'images
+        if ($request->has('image_links')) {
+            $links = collect(explode(',', $request->image_links))
+                ->map(function($link) {
+                    return ['url' => trim($link)];
+                })
+                ->filter(function($link) {
+                    return !empty($link['url']);
+                })
+                ->values()
             ->toArray();
+            
         $product->additional_links = json_encode($links);
     }
 
-    // Traiter les spécifications (avec upload d'icône)
-    if ($request->specifications) {
+        // Gestion des spécifications
+        if ($request->has('specifications')) {
         $specs = [];
         foreach ($request->specifications as $index => $specification) {
-            if (!empty($specification['name'])) {
                 $specData = ['name' => $specification['name']];
 
-                if ($request->hasFile("specifications.$index.icon")) {
-                    $iconPath = $request->file("specifications.$index.icon")->store('specification-icons', 'public');
+                if (isset($specification['icon']) && $specification['icon']) {
+                    $iconPath = $specification['icon']->store('specifications', 'public');
                     $specData['icon'] = $iconPath;
-                } elseif (isset($specification['existing_icon'])) {
-                    // Garde l’icône existante si elle est envoyée (cas de l’édition)
-                    $specData['icon'] = $specification['existing_icon'];
+                } elseif (isset($product->specifications[$index]['icon'])) {
+                    $specData['icon'] = $product->specifications[$index]['icon'];
                 }
 
                 $specs[] = $specData;
             }
-        }
-
-        $product->specifications = !empty($specs) ? json_encode($specs) : null;
+            $product->specifications = json_encode($specs);
     }
 
     $product->save();
 
-    return redirect()
-        ->route('dashboard.produits.index')
-        ->with('success', 'Produit modifié avec succès !');
+        return response()->json([
+            'success' => true,
+            'message' => 'Produit modifié avec succès'
+        ]);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Erreur de validation: ' . implode(', ', $e->errors())
+        ], 422);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Erreur lors de la modification du produit: ' . $e->getMessage()
+        ], 500);
+    }
 }
 
 
@@ -329,9 +346,8 @@ public function update(Request $request, Product $product)
 public function edit($id)
 {
     $product = Product::findOrFail($id);
-    $categories = Category::all();  // Récupère toutes les catégories
-
-    return view('dashboard.produits.index', compact('product', 'categories'));
+    $categories = Category::whereNull('parent_id')->orderBy('name')->get();
+    return view('dashboard.edit-product', compact('product', 'categories'));
 }
 
 

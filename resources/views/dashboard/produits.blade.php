@@ -9,49 +9,54 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="shortcut icon" href="../assets/img/logo/favicon.png" type="image/x-icon">
-
+ 
     <style>
         [x-cloak] { display: none !important; }
     </style>
 </head>
 <body class="bg-gray-100 h-screen" x-data="{ sideMenu: false }">
-    
-    @include('dashboard.components.sideleft')
-
-    <div class="main-content lg:ml-[250px] xl:ml-[300px] w-[calc(100%-300px)]" x-data="{ searchOverlay: false }">
-        @include('dashboard.components.header')
-        
-        <div class="body-content px-8 py-8 bg-gray-100">
-            <div class="flex justify-between mb-10">
-                <div>
-                    <h3 class="text-2xl font-bold mb-0">Produits</h3>
-                    <ul class="text-xs font-medium flex items-center space-x-3 text-gray-500">
-                        <li>
-                            <a href="product-list.html" class="hover:text-blue-600">Home</a>
-                        </li>
-                        <li class="flex items-center">
-                            <span class="inline-block bg-gray-400 w-1 h-1 rounded-full"></span>
-                        </li>
-                        <li class="text-gray-500">Liste de produits</li>                       
-                    </ul>
-                </div>
-            </div>
-
+   
             <!-- table -->
-            <div class="bg-white rounded-lg shadow-sm py-4">
-                
-                @if(session('success'))
-                <div class="flex items-center p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50" role="alert">
-                    <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-                    </svg>
-                    <span class="sr-only">Succès</span>
-                    <div>
-                      <span class="font-medium">Succès!</span> {{ session('success') }}.
+             
+    <div class="tp-main-wrapper bg-slate-100 h-screen" x-data="{ sideMenu: false }">
+        @include('dashboard.components.sideleft')
+ 
+        <div class="fixed top-0 left-0 w-full h-full z-40 bg-black/70 transition-all duration-300" :class="sideMenu ? 'visible opacity-1' : '  invisible opacity-0 '" x-on:click="sideMenu = ! sideMenu"> </div>
+ 
+        <div class="tp-main-content lg:ml-[250px] xl:ml-[300px] w-[calc(100% - 300px)]"  x-data="{ searchOverlay: false }">
+ 
+            @include('dashboard.components.header')
+ 
+            <div class="body-content px-8 py-8 bg-slate-100">
+                <div class="flex justify-between mb-10">
+                    <div class="page-title">
+                        <h3 class="mb-0 text-[28px]">Commandes</h3>
+                        <ul class="text-tiny font-medium flex items-center space-x-3 text-text3">
+                            <li class="breadcrumb-item text-muted">
+                                <a href="product-list.html" class="text-hover-primary"> Accueil</a>
+                            </li>
+                            <li class="breadcrumb-item flex items-center">
+                                <span class="inline-block bg-text3/60 w-[4px] h-[4px] rounded-full"></span>
+                            </li>
+                            <li class="breadcrumb-item text-muted">Liste commandes</li>
+                                           
+                        </ul>
                     </div>
                 </div>
-                @endif
-    
+ 
+                <!-- table -->
+                <div class="bg-white rounded-t-md rounded-b-md shadow-xs py-4">
+                    @if(session('success'))
+                    <div class="flex items-center p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
+                        <svg class="shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+                        </svg>
+                        <span class="sr-only">Succès</span>
+                        <div>
+                            <span class="font-medium">Succès!</span>   {{ session('success') }} .
+                        </div>
+                    </div>
+                    @endif
                 <form method="GET" action="{{ route('dashboard.produits.index') }}">
                     <div class="search-box flex items-center justify-between px-8 py-8">
                         <div class="relative w-full max-w-md">
@@ -78,7 +83,7 @@
                         </div>
                     </div>
                 </form>
-                
+               
                 <div class="relative overflow-x-auto mx-8">
                     <table class="w-full text-sm text-left text-gray-500">
                         <thead class="bg-white text-xs text-gray-700 uppercase">
@@ -94,13 +99,13 @@
                                 <th class="px-3 py-3 text-right">SKU</th>
                                 <th class="px-3 py-3 text-right">Prix</th>
                                 <th class="px-3 py-3 text-right">Stock</th>
-
+ 
                                 <th class="px-3 py-3 text-right">Statut</th>
                                 <th class="px-3 py-3 text-right"></th>
                                 <th class="px-3 py-3 text-right"></th>
                                 <th class="px-9 py-3 text-right"></th>
                                 <th class="px-9 py-3 text-right">Date Ajouter</th>
-
+ 
                             </tr>
                         </thead>
                         <tbody>
@@ -109,9 +114,9 @@
                                 $links = $product->additional_links ? json_decode($product->additional_links, true) : [];
                                 $firstLink = count($links) > 0 ? $links[0]['url'] : '#';
                             @endphp
-                            <tr class="bg-white border-b border-gray-200 last:border-0 text-sm" 
-                                x-data="{ 
-                                    showEditModal: false, 
+                            <tr class="bg-white border-b border-gray-200 last:border-0 text-sm"
+                                x-data="{
+                                    showEditModal: false,
                                     showDeleteModal: false,
                                     productData: {
                                         id: {{ $product->id }},
@@ -130,7 +135,7 @@
                                         this.productData.specifications.splice(index, 1);
                                     }
                                 }">
-                            
+                           
                                 <!-- Checkbox -->
                                 <td class="pr-3 py-4">
                                     <div class="flex items-center">
@@ -138,7 +143,7 @@
                                         <label for="product-{{ $product->id }}" class="w-4 h-4 border border-gray-300 rounded-sm cursor-pointer relative peer-checked:after:opacity-100 after:content-[''] after:absolute after:top-[3px] after:left-[5px] after:w-[5px] after:h-[8px] after:border-r-2 after:border-b-2 after:border-black after:rotate-45 after:opacity-0"></label>
                                     </div>
                                 </td>
-                            
+                           
                                 <!-- Product name & image -->
                                 <td class="pr-8 py-5">
                                     <div class="flex items-center gap-4">
@@ -148,12 +153,12 @@
                                         </a>
                                     </div>
                                 </td>
-                            
+                           
                                 <!-- Catégorie -->
                                 <td class="px-3 py-3 text-right text-gray-700">
                                     {{ $product->category->name ?? 'N/A' }}
                                 </td>
-                                
+                               
                                 <!-- SKU -->
                                 <td class="px-3 py-3 text-right text-gray-700">
                                     {{ $product->SKU ?? 'N/A' }}
@@ -170,7 +175,7 @@
                                     @php
                                         $quantity = $product->quantity ?? 0;
                                     @endphp
-                                
+                               
                                     @if ($quantity > 10)
                                         <span class="inline-block px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
                                             En stock ({{ $quantity }})
@@ -185,41 +190,41 @@
                                         </span>
                                     @endif
                                 </td>
-                                
+                               
                                 <!-- Status -->
                                 <td class="px-3 py-3 text-right">
                                     <span class="text-xs px-3 py-1 rounded-md bg-green-100 text-green-800 font-medium">
                                         {{ $product->status }}
                                     </span>
                                 </td>
-                            
+                           
                                 <!-- Bouton Modifier -->
                                 <td class="px-6 py-3 text-right">
-                                    <button 
+                                    <button
                                     class="edit-btn w-10 h-10 bg-green-500 text-white rounded-md hover:bg-green-600 transition"
                                     data-target="edit-modal-{{ $product->id }}">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                     </button>
                                 </td>
-                            
+                           
                                 <!-- Bouton Supprimer -->
                                 <td class="px-6 py-3 text-right">
-                                    <button 
+                                    <button
                                     class="delete-btn w-10 h-10 bg-white border border-gray-300 text-gray-600 rounded-md hover:bg-red-500 hover:border-red-500 hover:text-white transition"
                                     data-target="delete-modal-{{ $product->id }}">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
 </td>
-                            
+                           
  
 <td class="px-3 py-3 text-right">
 <span class="text-xs px-3 py-1 rounded-md bg-blue-100 text-blue-800 font-medium">
     {{ \Carbon\Carbon::parse($product->created_at)->translatedFormat('d F Y à H:i') }}
-
+ 
 </span>
 </td>
  
-
+ 
                                 <!-- Bouton Voir -->
                                 <td class="px-6 py-3 text-right">
                                     <a href="{{ url('/produit/'.$product->id) }}" target="_blank">
@@ -228,192 +233,27 @@
                                         </button>
                                     </a>
                                 </td>
-                            
+                           
 <!-- Modal Modifier -->
-<div id="edit-modal-{{ $product->id }}" class="modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl mx-4 relative">
-       
-         <div class="container">
-            <h2>Modifier le Produit : {{ $product->name }}</h2>
-            <form action="{{ route('dashboard.produits.update', $product->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
-                @csrf
-                @method('PUT')
-            
-                <!-- SKU -->
-                <div>
-                    <label for="SKU" class="block text-sm font-medium text-gray-700">SKU</label>
-                    <input type="text" id="SKU" name="SKU" value="{{ old('SKU', $product->SKU) }}" required
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                    @error('SKU')
-                        <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
-            
-                <!-- Nom -->
-                <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700">Nom du Produit</label>
-                    <input type="text" id="name" name="name" value="{{ old('name', $product->name) }}" required
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                    @error('name')
-                        <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
-            
-                <!-- Description -->
-                <div>
-                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea id="description" name="description" rows="4" required
-                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">{{ old('description', $product->description) }}</textarea>
-                    @error('description')
-                        <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
-            
-                <!-- Prix Normal -->
-                <div>
-                    <label for="regular_price" class="block text-sm font-medium text-gray-700">Prix Normal</label>
-                    <input type="number" id="regular_price" name="regular_price" value="{{ old('regular_price', $product->regular_price) }}" required min="0"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                    @error('regular_price')
-                        <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
-            
-                <!-- Prix Promo -->
-                <div>
-                    <label for="sale_price" class="block text-sm font-medium text-gray-700">Prix Promo</label>
-                    <input type="number" id="sale_price" name="sale_price" value="{{ old('sale_price', $product->sale_price) }}" min="0"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                    @error('sale_price')
-                        <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
-               
-                <!-- Statut -->
-                <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700">Statut</label>
-                    <select id="status" name="status" required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        <option value="published" {{ old('status', $product->status) == 'published' ? 'selected' : '' }}>Publié</option>
-                        <option value="draft" {{ old('status', $product->status) == 'draft' ? 'selected' : '' }}>Brouillon</option>
-                    </select>
-                    @error('status')
-                        <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
-            
-                <!-- Spécifications -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Spécifications</label>
-                    <div id="specifications-wrapper" class="space-y-4 mt-2">
-                        @foreach(json_decode($product->specifications, true) ?? [] as $index => $spec)
-                            <div class="border rounded-md p-4 bg-gray-50">
-                                <input type="text" name="specifications[{{ $index }}][name]" value="{{ old("specifications.$index.name", $spec['name']) }}" required
-                                       class="mb-2 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                       placeholder="Nom de la spécification">
-                                @error("specifications.$index.name")
-                                    <div class="text-red-500 text-sm">{{ $message }}</div>
-                                @enderror
-            
-                                <input type="file" name="specifications[{{ $index }}][icon]"
-                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                @error("specifications.$index.icon")
-                                    <div class="text-red-500 text-sm">{{ $message }}</div>
-                                @enderror
-            
-                                @if(isset($spec['icon']))
-                                    <div class="mt-2">
-                                        <img src="{{ asset('storage/' . $spec['icon']) }}" alt="Icon" class="w-12 h-12 object-contain">
-                                    </div>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-            
-                    <button type="button" onclick="addSpecification()"
-                            class="mt-3 inline-flex items-center px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
-                        Ajouter une spécification
-                    </button>
-                </div>
-            
-                <!-- Quantité -->
-                <div>
-                    <label for="quantity" class="block text-sm font-medium text-gray-700">Quantité</label>
-                    <input type="number" id="quantity" name="quantity" value="{{ old('quantity', $product->quantity) }}" required min="0"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                    @error('quantity')
-                        <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
-            
-                <!-- Submit -->
-                <div>
-                    <button type="submit"
-                            class="w-full inline-flex justify-center items-center px-4 py-2 bg-green-600 text-white font-semibold text-sm rounded-md hover:bg-green-700">
-                        Mettre à jour le Produit
-                    </button>
-                </div>
-            </form>
-            
-            
-        </div>
-        
-        <script>
-            function addSpecification() {
-                const wrapper = document.getElementById('specifications-wrapper');
-                const newSpecification = document.createElement('div');
-                newSpecification.classList.add('specification');
-                newSpecification.innerHTML = `
-                    <input type="text" class="form-control" name="specifications[][name]" required>
-                    <input type="file" class="form-control" name="specifications[][icon]">
-                `;
-                wrapper.appendChild(newSpecification);
-            }
-
-
-            <script>
-let specIndex = {{ count(json_decode($product->specifications, true) ?? []) }};
-
-function addSpecification() {
-    const wrapper = document.getElementById('specifications-wrapper');
-
-    const div = document.createElement('div');
-    div.classList.add('specification', 'mb-2', 'border', 'p-2');
-
-    div.innerHTML = `
-        <input type="text" class="form-control mb-1" name="specifications[${specIndex}][name]" placeholder="Nom de la spécification" required>
-        <input type="file" class="form-control mb-1" name="specifications[${specIndex}][icon]">
-    `;
-
-    wrapper.appendChild(div);
-    specIndex++;
-}
-</script>
-
-        </script>
-        
-        
-        <button class="close-modal absolute top-2 right-2 text-gray-500 hover:text-black" data-target="edit-modal-{{ $product->id }}">✕</button>
-    </div>
-</div>
-
+ 
+ 
 <!-- Modal Supprimer -->
 <div id="delete-modal-{{ $product->id }}" class="modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-4 relative">
           <!-- Bouton de fermeture -->
           <button onclick="document.getElementById('deleteModal').classList.add('hidden')" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">&times;</button>
-
+ 
           <!-- Contenu -->
           <h2 class="text-xl font-bold text-red-600 mb-4">Confirmer la suppression</h2>
           <p class="text-gray-700 mb-6">
               Êtes-vous sûr de vouloir supprimer le produit <strong>{{ $product->name }}</strong> (SKU : {{ $product->SKU }}) ?
               Cette action est irréversible.
           </p>
-  
+ 
           <!-- Actions -->
           <div class="flex justify-end space-x-3">
               <button onclick="document.getElementById('deleteModal').classList.add('hidden')" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Annuler</button>
-  
+ 
               <form action="{{ route('dashboard.produits.destroy', $product->id) }}" method="POST">
                   @csrf
                   @method('DELETE')
@@ -429,14 +269,14 @@ function addSpecification() {
             document.getElementById(modalId).classList.remove('hidden');
         });
     });
-
+ 
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.addEventListener('click', function () {
             const modalId = this.getAttribute('data-target');
             document.getElementById(modalId).classList.add('hidden');
         });
     });
-
+ 
     // Fermer la modale en cliquant à l'extérieur
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', function (e) {
@@ -446,11 +286,11 @@ function addSpecification() {
         });
     });
 </script>
-                                
+                               
                             </tr>
                             @endforeach
                             </tbody>
-                            
+                           
                     </table>
                     <div class="px-8 py-4">
                         {{ $products->appends(request()->query())->links() }}
@@ -460,6 +300,20 @@ function addSpecification() {
         </div>
     </div>
  
-
+ 
 </body>
 </html>
+<script>
+    // Fonction pour ouvrir le modal d'édition
+    function openEditModal(productId) {
+        window.location.href = `/dashboard/produits/${productId}/edit`;
+    }
+
+    // Ajouter les écouteurs d'événements aux boutons d'édition
+    document.querySelectorAll('.edit-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.getAttribute('data-target').replace('edit-modal-', '');
+            openEditModal(productId);
+        });
+    });
+</script>

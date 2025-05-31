@@ -9,6 +9,10 @@ class Order extends Model
 {
     use HasFactory;
 
+    // Constantes pour le mode de paiement
+    const MODE_PAIEMENT_ESPECE = 'espece';
+    const MODE_PAIEMENT_CARTE = 'carte';
+
     protected $fillable = [
         'red_order', 'nom', 'prenom', 'email', 'telephone', 'gouvernorat', 'adress',
         'sex', 'date_naissance', 'date_order', 'status', 'id_produit',
@@ -23,12 +27,20 @@ class Order extends Model
         'date_shipping' => 'datetime',
     ];
 
+    // Méthode pour vérifier si le paiement est par carte
+    public function isCardPayment()
+    {
+        return $this->mode_paiement === self::MODE_PAIEMENT_CARTE;
+    }
+
+    // Méthode pour vérifier si le paiement est en espèces
+    public function isCashPayment()
+    {
+        return $this->mode_paiement === self::MODE_PAIEMENT_ESPECE;
+    }
+
     public function product()
     {
         return $this->belongsTo(Product::class, 'id_produit');
-        return $this->belongsTo(Product::class);
     }
-    
- 
-
 }

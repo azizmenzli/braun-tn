@@ -1,7 +1,31 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="fr">
 <head>
-  
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4S6PCWSS1T"></script> <script>   
+window.dataLayer = window.dataLayer || [];   function gtag(){dataLayer.push(arguments);}  
+gtag('js', new Date());   
+gtag('config', 'G-4S6PCWSS1T'); </script>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-KMT4WD59');</script>
+
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '699127362510982');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=699127362510982&ev=PageView&noscript=1"
+/></noscript>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Parcourez la gamme de produits Braun Tunisie pour le rasage des hommes, l'épilation des femmes, la beauté de la peau et des cheveux.">
@@ -12,7 +36,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.braun.tn">
   <meta property="og:image" content="https://res.cloudinary.com/ddi29nbzl/image/upload/v1745834716/SE9_1_fmisxu.png">
-  <link rel="shortcut icon" href="assets/img/logo/favicon.png" type="image/x-icon">
+  <link rel="shortcut icon" href="https://res.cloudinary.com/dlhonl1wo/image/upload/v1747046500/favicon_tvqtpu.png" type="image/x-icon">
 
   <title>Braun Tunisie</title>
   <link rel="canonical" href="https://www.braun.tn" />
@@ -37,6 +61,8 @@
 </head>
  
 <body class="bg-black flex items-center justify-center min-h-screen">
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KMT4WD59"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   @include('dashboard.components.site.nav')
 
   <div class="py-20 md:py-16 flex flex-col items-center w-full max-w-6xl">
@@ -57,8 +83,8 @@
               <div class="md:w-1/2">
                 <h2 class="text-xl font-bold text-gray-800">Face Spa</h2>
                 <p class="text-gray-600 mb-4">À partir de : </p>
-                <span class="px-5 line-through mr-2">345 DT</span><br>
-                <span class="px-5 text-2xl font-bold text-black">280 DT</span>
+                <span class="line-through">325 DT</span><br>
+                <span class="text-2xl font-bold text-black">269 DT</span>
               </div>
               
               <div class="md:w-1/2 flex justify-center md:justify-end mb-4 md:mb-0">
@@ -113,8 +139,8 @@
               <div class="md:w-1/2">
                 <h2 class="text-xl font-bold text-gray-800">Silk·épil 3</h2>
                 <p class="text-gray-600 mb-4">À partir de : </p>
-                <span class="px-5 line-through mr-2">209 DT</span><br>
-                <span class="px-5 text-2xl font-bold text-black">160 DT</span>
+                <span class="line-through">200 DT</span><br>
+                <span class="text-2xl font-bold text-black">169 DT</span>
               </div>
               
               <div class="md:w-1/2 flex justify-center md:justify-end mb-4 md:mb-0">
@@ -164,8 +190,8 @@
               <div class="md:w-1/2">
                 <h2 class="text-xl font-bold text-gray-800">Silk·épil 5</h2>
                 <p class="text-gray-600 mb-4">À partir de : </p>
-                <span class="px-5 line-through mr-2">395 DT</span><br>
-                <span class="px-5 text-2xl font-bold text-black">300 DT</span>
+                <span class="line-through">375 DT</span><br>
+                <span class="text-2xl font-bold text-black">300 DT</span>
               </div>
               
               <div class="md:w-1/2 flex justify-center md:justify-end mb-4 md:mb-0">
@@ -228,8 +254,8 @@
               <div class="md:w-1/2">
                 <h2 class="text-xl font-bold text-gray-800">Silk·épil 9</h2>
                 <p class="text-gray-600 mb-4">À partir de : </p>
-                <span class="px-5 line-through mr-2">783 DT</span><br>
-                <span class="px-5 text-2xl font-bold text-black">600 DT</span>
+                <span class="line-through">1000 DT</span><br>
+                <span class="text-2xl font-bold text-black">799 DT</span>
               </div>
               
               <div class="md:w-1/2 flex justify-center md:justify-end mb-4 md:mb-0">
@@ -289,8 +315,8 @@
               <div class="md:w-1/2">
                 <h2 class="text-xl font-bold text-gray-800">Silk·épil 9 Flex</h2>
                 <p class="text-gray-600 mb-4">À partir de : </p>
-                <span class="px-5 line-through mr-2">1251 DT</span><br>
-                <span class="px-5 text-xl font-bold text-black">950 DT</span>
+                <span class="line-through">1200 DT</span><br>
+                <span class="text-xl font-bold text-black">969 DT</span>
               </div>
               
               <div class="md:w-1/2 flex justify-center md:justify-end mb-4 md:mb-0">

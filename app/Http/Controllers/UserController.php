@@ -70,6 +70,7 @@ class UserController extends Controller
 
     public function update(Request $request, $id)
     {
+        try {
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $id,
@@ -79,15 +80,39 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         $user->update($request->all());
     
-        return redirect()->route('dashboard.users')->with('success', 'Utilisateur mis à jour avec succès.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Utilisateur mis à jour avec succès'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation: ' . $e->getMessage()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la mise à jour de l\'utilisateur: ' . $e->getMessage()
+            ], 500);
+        }
     }
     
     public function destroy($id)
     {
+        try {
         $user = User::findOrFail($id);
         $user->delete();
     
-        return redirect()->route('dashboard.users')->with('success', 'Utilisateur supprimé avec succès.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Utilisateur supprimé avec succès'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression de l\'utilisateur: ' . $e->getMessage()
+            ], 500);
+        }
     }
     
      
@@ -222,9 +247,11 @@ public function sendResetLinkEmail(Request $request)
         $request->only('email')
     );
 
-    return $status === Password::RESET_LINK_SENT
-        ? back()->with('status', __($status))
-        : back()->withErrors(['email' => __($status)]);
+    if ($status === Password::RESET_LINK_SENT) {
+        return back()->with('success', 'Un email de réinitialisation a été envoyé à votre adresse email. Veuillez vérifier votre boîte de réception.');
+    }
+
+    return back()->withErrors(['email' => __($status)]);
 }
 
 // 3. Affiche le formulaire de réinitialisation avec le token

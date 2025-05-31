@@ -31,7 +31,7 @@
                         <h3 class="mb-0 text-[28px]">Transaction</h3>
                         <ul class="text-tiny font-medium flex items-center space-x-3 text-text3">
                             <li class="breadcrumb-item text-muted">
-                                <a href="product-list.html" class="text-hover-primary"> Home</a>
+                                <a href="{{ route('dashboard.home') }}"" class="text-hover-primary"> Home</a>
                             </li>
                             <li class="breadcrumb-item flex items-center">
                                 <span class="inline-block bg-text3/60 w-[4px] h-[4px] rounded-full"></span>

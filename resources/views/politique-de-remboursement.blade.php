@@ -1,6 +1,26 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4S6PCWSS1T"></script>
+ <script>   window.dataLayer = window.dataLayer || [];   function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());   gtag('config', 'G-4S6PCWSS1T');
+  </script>
+  <script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '699127362510982');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=699127362510982&ev=PageView&noscript=1"
+/></noscript>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
@@ -11,7 +31,7 @@
   <meta name="keywords" content="Braun, remboursement, épilateur, Silk-épil, Tunisie, essai, garantie, retour, politique de retour">
   <meta name="author" content="Braun Tunisie">
   <link rel="canonical" href="https://www.braun.tn/politique-de-remboursement" />
-  <link rel="shortcut icon" href="assets/img/logo/favicon.png" type="image/x-icon">
+  <link rel="shortcut icon" href="https://res.cloudinary.com/dlhonl1wo/image/upload/v1747046500/favicon_tvqtpu.png" type="image/x-icon">
 
   <!-- Open Graph (pour Facebook et autres) -->
   <meta property="og:title" content="Politique de remboursement | Braun Tunisie" />

@@ -111,9 +111,9 @@
                         <li>
                             <a href="{{ route('dashboard.clients.index') }}" class="block font-normal w-full text-[#6D6F71] hover:text-theme nav-dot">Clients</a>
                         </li>
-                       <!-- <li>
-                            <a href="{{ route('transaction') }}" class="block font-normal w-full text-[#6D6F71] hover:text-theme nav-dot">Transactions</a>
-                        </li>-->
+                        <li>
+                            <a href="{{ route('dashboard.transactions.index') }}" class="block font-normal w-full text-[#6D6F71] hover:text-theme nav-dot">Transactions</a>
+                        </li>
                     </ul>
                 </li>
           <li>
@@ -161,6 +161,19 @@
                               
                         </span>
                         Contact
+                    </a>
+                </li>
+                <li>
+                    <a 
+                    href="{{ route('dashboard.conversion') }}" 
+                    class="group rounded-md relative text-black text-lg font-medium inline-flex items-center w-full transition-colors ease-in-out duration-300 px-5 py-[9px] mb-3 hover:bg-gray sidebar-link-active">
+                        <span class="inline-block translate-y-[1px] mr-[10px] text-xl">
+                            <svg class="w-6 h-6 text-black dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+                                <path stroke="currentColor" stroke-width="2" d="M12 6v6l4 2"/>
+                            </svg>
+                        </span>
+                        Conversion
                     </a>
                 </li>
             </ul>

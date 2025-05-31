@@ -97,7 +97,7 @@ RUN chown -R root:www-data /var/www/html \
     && find /var/www/html -type d -exec chmod 755 {} \; \
     && chmod -R ug+rwx /var/www/html/storage \
     && chmod -R ug+rwx /var/www/html/bootstrap/cache \
-    && chmod -R ug+rwx /var/www/html/public # Review if public content needs group write
+    && chmod -R ug+rwx /var/www/html/public
 
 # Add health check
 HEALTHCHECK --interval=30s --timeout=3s \
@@ -111,6 +111,9 @@ COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Container will run as root by default (no USER directive)
+
+# Create storage symbolic link
+RUN php artisan storage:link
 
 # Start Apache in foreground
 ENTRYPOINT ["docker-entrypoint.sh"]
